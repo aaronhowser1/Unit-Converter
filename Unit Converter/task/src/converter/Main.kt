@@ -17,21 +17,27 @@ fun showMenu() {
         val inputUnit = input[1].lowercase()
         val outputUnit = input[3].lowercase()
 
+        //Correct combinations
         if (isLength(inputUnit) && isLength(outputUnit)) {
             convertLength(inputUnit, amount, outputUnit)
         } else if (isMass(inputUnit) && isMass(outputUnit)) {
             convertMass(inputUnit, amount, outputUnit)
         } else if (isTemp(inputUnit) && isTemp(outputUnit)) {
             convertTemperature(inputUnit, amount, outputUnit)
-        } else if ((isLength(inputUnit))) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else if (isAny(inputUnit) && !isAny(outputUnit)) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
-        } else if (!isAny(inputUnit) && isAny(outputUnit)) {
-            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
         } else {
-            println("Conversion from ??? to ??? is impossible")
+            handleUnitMismatch(inputUnit, outputUnit)
         }
+
+
+    //        } else if ((isLength(inputUnit))) {
+//            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+//        } else if (isAny(inputUnit) && !isAny(outputUnit)) {
+//            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
+//        } else if (!isAny(inputUnit) && isAny(outputUnit)) {
+//            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+//        } else {
+//            println("Conversion from ??? to ??? is impossible")
+//        }
     }
 }
 
@@ -225,4 +231,38 @@ fun makePlural(input: String): String {
         }
     }
     return output
+}
+
+fun handleUnitMismatch(inputUnit: String, outputUnit: String) {
+    if (isLength(inputUnit)) {
+        if (isMass(outputUnit)) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+        } else if (isTemp(outputUnit)) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
+        } else {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
+        }
+    } else if (isMass(inputUnit)) {
+        if (isLength(outputUnit)) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+        } else if (isTemp(outputUnit)) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
+        } else {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
+        }
+    } else if (isTemp(inputUnit)) {
+        if (isMass(outputUnit) || isLength(outputUnit)) {
+            println("Conversion from ${clarifyTempUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+        } else {
+            println("Conversion from ${clarifyTempUnitName(inputUnit,0.0)} to ??? is impossible")
+        }
+    } else if (!isAny(inputUnit)) {
+        if (isLength(outputUnit) || isMass(outputUnit)) {
+            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+        } else if (isTemp(outputUnit)) {
+            println("Conversion from ??? to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
+        } else {
+            println("Conversion from ??? to ??? is impossible")
+        }
+    }
 }
