@@ -14,10 +14,21 @@ fun showMenu() {
         val input = readln().split(" ")
         if (input[0] == "exit") break
         val amount = input[0].toDouble()
-        val inputUnit = input[1].lowercase()
-        val outputUnit = input[3].lowercase()
 
-        //Correct combinations
+        var inputUnit = ""
+        var outputUnit = ""
+        if (input[1].contains("degree")) {
+            inputUnit = "${input[1]} ${input[2]}"
+            if (input[4].contains("degree")) {
+                outputUnit = "${input[4]} ${input[5]}"
+            } else {
+                outputUnit = input[4]
+            }
+        } else {
+            inputUnit = input[1].lowercase()
+            outputUnit = input[3].lowercase()
+        }
+
         if (isLength(inputUnit) && isLength(outputUnit)) {
             convertLength(inputUnit, amount, outputUnit)
         } else if (isMass(inputUnit) && isMass(outputUnit)) {
@@ -27,17 +38,6 @@ fun showMenu() {
         } else {
             handleUnitMismatch(inputUnit, outputUnit)
         }
-
-
-    //        } else if ((isLength(inputUnit))) {
-//            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-//        } else if (isAny(inputUnit) && !isAny(outputUnit)) {
-//            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
-//        } else if (!isAny(inputUnit) && isAny(outputUnit)) {
-//            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-//        } else {
-//            println("Conversion from ??? to ??? is impossible")
-//        }
     }
 }
 
@@ -73,29 +73,29 @@ fun convertMass(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
 }
 
 fun convertTemperature(_inputUnit: String, inputTemperature: Double, _outputUnit: String) {
-    var inputUnit = clarifyTempUnitName(_inputUnit,1.0)
-    var outputUnit = clarifyTempUnitName(_outputUnit, 1.0)
+    val inputUnit = clarifyTempUnitName(_inputUnit,1.0)
+    val outputUnit = clarifyTempUnitName(_outputUnit, 1.0)
 
     val convertedTemperature: Double = when (inputUnit) {
         "degree Celsius" -> {
-            if (outputUnit == "degree Fahrenheit") {
-                celsiusFahrenheitConversion(inputTemperature)
-            } else {
-                celsiusKelvinConversion(inputTemperature)
+            when (outputUnit) {
+                "degree Fahrenheit" -> celsiusFahrenheitConversion(inputTemperature)                            //C->F
+                "Kelvin", -> celsiusKelvinConversion(inputTemperature)                                          //C->K
+                else -> inputTemperature                                                                        //C->C
             }
         }
         "degree Fahrenheit" -> {
-            if (outputUnit == "degree Celsius") {
-                celsiusFahrenheitConversion(inputTemperature,true)
-            } else {
-                kelvinFahrenheitConversion(inputTemperature,true)
+            when (outputUnit) {
+                "degree Celsius" -> celsiusFahrenheitConversion(inputTemperature,true)         //F->C
+                "Kelvin" -> kelvinFahrenheitConversion(inputTemperature,true)                   //F->K
+                else -> inputTemperature                                                                        //F->F
             }
         }
         "Kelvin" -> {
-            if (outputUnit == "degree Fahrenheit") {
-                kelvinFahrenheitConversion(inputTemperature)
-            } else {
-                celsiusKelvinConversion(inputTemperature,true)
+            when (outputUnit) {
+                "degree Fahrenheit" -> kelvinFahrenheitConversion(inputTemperature)                             //K -> F
+                "degree Celsius" -> celsiusKelvinConversion(inputTemperature,true)                //K -> C
+                else -> inputTemperature                                                                        // K -> K
             }
         }
         else -> 0.0
