@@ -1,60 +1,50 @@
 package converter
 
-val centimetersToMeters = Pair(145.0, 1.45)
-val milesToKilometers = Pair(2.0, 3.2187)
-val inchesToMillimeters = Pair(5.5, 139.7)
-val celsiusToFahrenheit = Pair(12.0, 53.6)
-val poundsToKilograms = Pair(3.0,1.360776)
-
 fun main() {
     println("Enter a number and a measure:")
     val input = readln().split(" ")
-    val amount = input[0].toInt()
-    var unit = input[1].lowercase()
+    val amount = input[0].toDouble()
+    val unit = clarifyUnitName(input[1].lowercase(),amount)
 
-    unit = when (unit) {
-        "km","kilometers" -> "kilometer"
-        "m","meters" -> "meter"
-        else -> unit
-    }
+    val convertedAmount = convertToMeters(amount,unit)
+    val convertedUnit = clarifyUnitName("meter",convertedAmount)
 
-    val convertedAmount: Int? = when (unit) {
-        "kilometer" -> amount*1000
-        "meter" -> amount/1000
-        else -> null
-    }
-
-    var convertedUnit: String? = when (unit) {
-        "kilometer" -> "meter"
-        "meter" -> "kilometer"
-        else -> null
-    }
-    if (amount != 1) unit += "s"
-    if (convertedAmount != 1) convertedUnit += "s"
-
-    if (convertedAmount == null) {
-        println("Wrong input")
-    } else {
-        println("$amount $unit is $convertedAmount $convertedUnit")
-    }
-
-//    val convertedAmount: Double = when (unit) {
-//        "cm","centimeters" -> convert(centimetersToMeters, amount)
-//        "m","meters" -> convert(centimetersToMeters, amount, true)
-//        "mi","miles" -> convert(milesToKilometers, amount)
-//        "km","kilometers" -> convert(milesToKilometers, amount)
-//        "in","inches" -> convert(inchesToMillimeters, amount)
-//        "mm","millimeters" -> convert(inchesToMillimeters, amount, true)
-//        "c","celsius" -> convert(celsiusToFahrenheit, amount)
-//        "f","fahrenheit" -> convert(celsiusToFahrenheit, amount, true)
-//        "lb","pounds" -> convert(poundsToKilograms, amount)
-//        "kg","kilograms" -> convert(poundsToKilograms, amount, true)
-//        else -> 0.0
-//    }
+    println("$amount $unit is $convertedAmount $convertedUnit")
 
 }
 
-fun convert(pair: Pair<Double, Double>, amount: Double, firstToSecond: Boolean = true): Double {
-    val factor = if (firstToSecond) pair.first/pair.second else pair.second/pair.first
-    return amount*factor
+fun convertToMeters(amount: Double, unit: String): Double {
+    return when (unit) {
+        "m","meter","meters" -> amount
+        "km","kilometer","kilometers" -> amount*1000
+        "cm","centimeter","centimeters" -> amount*0.01
+        "mm","millimeter","millimeters" -> amount*0.001
+        "mi","mile","miles" -> amount*1609.35
+        "yd","yard","yards" -> amount*0.9144
+        "ft","foot","feet" -> amount*0.3048
+        "in","inch","inches" -> amount*0.0254
+        else -> 0.0
+    }
+}
+
+fun clarifyUnitName(unit: String, amount: Double): String {
+    var newUnit = when (unit) {
+        "m", "meter", "meters" -> "meter"
+        "km", "kilometer", "kilometers" -> "kilometer"
+        "cm", "centimeter", "centimeters" -> "centimeter"
+        "mm", "millimeter", "millimeters" -> "millimeter"
+        "mi", "mile", "miles" -> "mile"
+        "yd", "yard", "yards" -> "yard"
+        "ft", "foot", "feet" -> "foot"
+        "in", "inch", "inches" -> "inch"
+        else -> ""
+    }
+    if (amount != 1.0) {
+        if (newUnit == "foot") {
+            newUnit = "feet"
+        } else {
+            newUnit += 's'
+        }
+    }
+    return newUnit
 }
