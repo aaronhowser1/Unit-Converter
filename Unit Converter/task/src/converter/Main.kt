@@ -14,43 +14,50 @@ fun showMenu() {
         val input = readln().split(" ")
         if (input[0] == "exit") break
         val amount = input[0].toDouble()
-        var inputUnit = input[1].lowercase()
-        var outputUnit = input[3].lowercase()
+        val inputUnit = input[1].lowercase()
+        val outputUnit = input[3].lowercase()
 
-        if (lengthUnits.contains(inputUnit)) {
-            if (lengthUnits.contains(outputUnit)) {
-                convertLength(inputUnit,amount,outputUnit)
-            } else {
-                if (massUnits.contains(outputUnit)) {
-                    println("Conversion from ${makePlural(inputUnit)} to ${makePlural(outputUnit)} is impossible")
-                } else println("Wrong output. Unknown unit $outputUnit")
-            }
+        if (isLength(inputUnit) && isLength(outputUnit)) {
+            convertLength(inputUnit, amount, outputUnit)
+        } else if (isMass(inputUnit) && isMass(outputUnit)) {
+            convertMass(inputUnit, amount, outputUnit)
+        } else if ((isLength(inputUnit) && isMass(outputUnit)) || (isMass(inputUnit) && isLength(outputUnit))) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
+        } else if (isEither(inputUnit) && !isEither(outputUnit)) {
+            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
+        } else if (!isEither(inputUnit) && isEither(outputUnit)) {
+            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
         } else {
-            if (massUnits.contains(inputUnit)) {
-                if (massUnits.contains(outputUnit)) {
-                    convertMass(inputUnit,amount,outputUnit)
-                } else if (lengthUnits.contains(outputUnit)) {
-                    println("Conversion from ${makePlural(inputUnit)} to ${makePlural(outputUnit)} is impossible")
-                } else println("Wrong output. Unknown unit $outputUnit")
-            }
-            else println("Wrong input. Unknown unit $inputUnit")
+            println("Conversion from ??? to ??? is impossible")
         }
     }
 }
 
+fun isLength(unit: String): Boolean {
+    return lengthUnits.contains(unit)
+}
+fun isMass(unit: String): Boolean {
+    return massUnits.contains(unit)
+}
+fun isEither(unit: String): Boolean {
+    return (isMass(unit) || isLength(unit))
+}
+
 fun convertLength(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
     val inputUnit = clarifyUnitName(_inputUnit,inputAmount)
+    var outputUnit = clarifyUnitName(_outputUnit,1.0)
     val amountInMeters = convertToMeters(inputAmount,inputUnit)
-    val convertedAmount = convertFromMeters(amountInMeters, _outputUnit)
-    val outputUnit = clarifyUnitName(_outputUnit,convertedAmount)
+    val convertedAmount = convertFromMeters(amountInMeters, outputUnit)
+    outputUnit = clarifyUnitName(outputUnit,convertedAmount)
     println("$inputAmount $inputUnit is $convertedAmount $outputUnit")
 }
 
 fun convertMass(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
     val inputUnit = clarifyUnitName(_inputUnit,inputAmount)
+    var outputUnit = clarifyUnitName(_outputUnit,1.0)
     val amountInGrams = convertToGrams(inputAmount,inputUnit)
-    val convertedAmount = convertFromGrams(amountInGrams, _outputUnit)
-    val outputUnit = clarifyUnitName(_outputUnit,convertedAmount)
+    val convertedAmount = convertFromGrams(amountInGrams, outputUnit)
+    outputUnit = clarifyUnitName(outputUnit,convertedAmount)
     println("$inputAmount $inputUnit is $convertedAmount $outputUnit")
 }
 
