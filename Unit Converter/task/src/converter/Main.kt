@@ -1,16 +1,23 @@
 package converter
 
 fun main() {
-    println("Enter a number and a measure:")
+
+    val acceptedUnits = arrayOf("m","meter","meters","km","kilometer","kilometers","cm","centimeter","centimeters","mm","millimeter","millimeters","mi","mile","miles","yd","yard","yards","ft","foot","feet","in","inch","inches")
+
+    println("Enter a number and a measure of length:")
     val input = readln().split(" ")
     val amount = input[0].toDouble()
-    val unit = clarifyUnitName(input[1].lowercase(),amount)
+    var unit = input[1].lowercase()
 
-    val convertedAmount = convertToMeters(amount,unit)
-    val convertedUnit = clarifyUnitName("meter",convertedAmount)
+    if (acceptedUnits.contains(unit)) {
+        unit = clarifyUnitName(unit,amount)
+        val convertedAmount = convertToMeters(amount,unit)
+        val convertedUnit = clarifyUnitName("meter",convertedAmount)
 
-    println("$amount $unit is $convertedAmount $convertedUnit")
-
+        println("$amount $unit is $convertedAmount $convertedUnit")
+    } else {
+        println("Wrong input. Unknown unit $unit")
+    }
 }
 
 fun convertToMeters(amount: Double, unit: String): Double {
@@ -40,10 +47,10 @@ fun clarifyUnitName(unit: String, amount: Double): String {
         else -> ""
     }
     if (amount != 1.0) {
-        if (newUnit == "foot") {
-            newUnit = "feet"
-        } else {
-            newUnit += 's'
+        when (newUnit) {
+            "foot" -> newUnit = "feet"
+            "inch" -> newUnit += "es"
+            else -> newUnit += 's'
         }
     }
     return newUnit
