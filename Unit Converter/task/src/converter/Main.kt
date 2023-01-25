@@ -2,7 +2,7 @@ package converter
 
 val lengthUnits = arrayOf("m","meter","meters","km","kilometer","kilometers","cm","centimeter","centimeters","mm","millimeter","millimeters","mi","mile","miles","yd","yard","yards","ft","foot","feet","in","inch","inches")
 val massUnits = arrayOf("g","gram","grams","kg","kilogram","kilograms","mg","milligram","milligrams","lb","pound","pounds","oz","ounce","ounces")
-
+val temperatureUnits = arrayOf("degree celsius","degrees celsius","celsius","dc","c","degree fahrenheit","degrees fahrenheit","fahrenheit","df","f","kelvin","kelvins","k")
 
 fun main() {
     showMenu()
@@ -21,11 +21,13 @@ fun showMenu() {
             convertLength(inputUnit, amount, outputUnit)
         } else if (isMass(inputUnit) && isMass(outputUnit)) {
             convertMass(inputUnit, amount, outputUnit)
-        } else if ((isLength(inputUnit) && isMass(outputUnit)) || (isMass(inputUnit) && isLength(outputUnit))) {
+        } else if (isTemp(inputUnit) && isTemp(outputUnit)) {
+            convertTemperature(inputUnit, amount, outputUnit)
+        } else if ((isLength(inputUnit))) {
             println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else if (isEither(inputUnit) && !isEither(outputUnit)) {
+        } else if (isAny(inputUnit) && !isAny(outputUnit)) {
             println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
-        } else if (!isEither(inputUnit) && isEither(outputUnit)) {
+        } else if (!isAny(inputUnit) && isAny(outputUnit)) {
             println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
         } else {
             println("Conversion from ??? to ??? is impossible")
@@ -39,8 +41,11 @@ fun isLength(unit: String): Boolean {
 fun isMass(unit: String): Boolean {
     return massUnits.contains(unit)
 }
-fun isEither(unit: String): Boolean {
-    return (isMass(unit) || isLength(unit))
+fun isTemp(unit: String): Boolean {
+    return temperatureUnits.contains(unit)
+}
+fun isAny(unit: String): Boolean {
+    return (isMass(unit) || isLength(unit) || isTemp(unit))
 }
 
 fun convertLength(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
@@ -59,6 +64,38 @@ fun convertMass(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
     val convertedAmount = convertFromGrams(amountInGrams, outputUnit)
     outputUnit = clarifyUnitName(outputUnit,convertedAmount)
     println("$inputAmount $inputUnit is $convertedAmount $outputUnit")
+}
+
+fun convertTemperature(_inputUnit: String, inputTemperature: Double, _outputUnit: String) {
+    var inputUnit = clarifyTempUnitName(_inputUnit,1.0)
+    var outputUnit = clarifyTempUnitName(_outputUnit, 1.0)
+
+    val convertedTemperature: Double = when (inputUnit) {
+        "degree Celsius" -> {
+            if (outputUnit == "degree Fahrenheit") {
+                celsiusFahrenheitConversion(inputTemperature)
+            } else {
+                celsiusKelvinConversion(inputTemperature)
+            }
+        }
+        "degree Fahrenheit" -> {
+            if (outputUnit == "degree Celsius") {
+                celsiusFahrenheitConversion(inputTemperature,true)
+            } else {
+                kelvinFahrenheitConversion(inputTemperature,true)
+            }
+        }
+        "Kelvin" -> {
+            if (outputUnit == "degree Fahrenheit") {
+                kelvinFahrenheitConversion(inputTemperature)
+            } else {
+                celsiusKelvinConversion(inputTemperature,true)
+            }
+        }
+        else -> 0.0
+    }
+
+    println("$inputTemperature ${clarifyTempUnitName(inputUnit,inputTemperature)} is $convertedTemperature ${clarifyTempUnitName(outputUnit,convertedTemperature)}")
 }
 
 fun convertToMeters(amount: Double, unit: String): Double {
@@ -111,6 +148,31 @@ fun convertFromGrams(amount: Double, unit: String): Double {
     }
 }
 
+fun celsiusFahrenheitConversion(temp: Double, fahrenheitToCelsius: Boolean = false): Double {
+    return if (fahrenheitToCelsius) {
+        (temp - 32) * (5.0/9.0)
+    } else {
+        temp * (9.0/5.0) + 32
+    }
+}
+
+fun celsiusKelvinConversion(temp: Double, kelvinToCelsius: Boolean = false): Double {
+    return if (kelvinToCelsius) {
+        temp - 273.15
+    } else {
+        temp + 273.15
+    }
+}
+
+
+fun kelvinFahrenheitConversion(temp: Double, fahrenheitToKelvin: Boolean = false): Double {
+    return if (fahrenheitToKelvin) {
+        (temp + 459.67) * (5.0/9.0)
+    } else {
+        temp*(9.0/5.0) - 459.67
+    }
+}
+
 fun clarifyUnitName(unit: String, amount: Double): String {
     var newUnit = when (unit) {
         "m", "meter", "meters" -> "meter"
@@ -132,6 +194,23 @@ fun clarifyUnitName(unit: String, amount: Double): String {
     }
     if (amount != 1.0) {
         newUnit = makePlural(newUnit)
+    }
+    return newUnit
+}
+
+fun clarifyTempUnitName(unit: String, amount: Double): String {
+    var newUnit = when (unit) {
+        "degree celsius","degrees celsius","celsius","dc","c" -> "degree Celsius"
+        "degree fahrenheit","degrees fahrenheit","fahrenheit","df","f" -> "degree Fahrenheit"
+        "kelvin","kelvins","k" -> "Kelvin"
+        else -> unit
+    }
+    if (amount != 1.0) {
+        newUnit = when (newUnit) {
+            "degree Celsius" -> "degrees Celsius"
+            "degree" -> "degrees Fahrenheit"
+            else -> newUnit
+        }
     }
     return newUnit
 }
