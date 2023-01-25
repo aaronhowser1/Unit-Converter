@@ -9,22 +9,48 @@ val poundsToKilograms = Pair(3.0,1.360776)
 fun main() {
     println("Enter a number and a measure:")
     val input = readln().split(" ")
-    val amount = input[0].toDouble()
-    val unit = input[1].lowercase()
+    val amount = input[0].toInt()
+    var unit = input[1].lowercase()
 
-    val convertedAmount: Double = when (unit) {
-        "cm","centimeters" -> convert(centimetersToMeters, amount)
-        "m","meters" -> convert(centimetersToMeters, amount, true)
-        "mi","miles" -> convert(milesToKilometers, amount)
-        "km","kilometers" -> convert(milesToKilometers, amount)
-        "in","inches" -> convert(inchesToMillimeters, amount)
-        "mm","millimeters" -> convert(inchesToMillimeters, amount, true)
-        "c","celsius" -> convert(celsiusToFahrenheit, amount)
-        "f","fahrenheit" -> convert(celsiusToFahrenheit, amount, true)
-        "lb","pounds" -> convert(poundsToKilograms, amount)
-        "kg","kilograms" -> convert(poundsToKilograms, amount, true)
-        else -> 0.0
+    unit = when (unit) {
+        "km","kilometers" -> "kilometer"
+        "m","meters" -> "meter"
+        else -> unit
     }
+
+    val convertedAmount: Int? = when (unit) {
+        "kilometer" -> amount*1000
+        "meter" -> amount/1000
+        else -> null
+    }
+
+    var convertedUnit: String? = when (unit) {
+        "kilometer" -> "meter"
+        "meter" -> "kilometer"
+        else -> null
+    }
+    if (amount != 1) unit += "s"
+    if (convertedAmount != 1) convertedUnit += "s"
+
+    if (convertedAmount == null) {
+        println("Wrong input")
+    } else {
+        println("$amount $unit is $convertedAmount $convertedUnit")
+    }
+
+//    val convertedAmount: Double = when (unit) {
+//        "cm","centimeters" -> convert(centimetersToMeters, amount)
+//        "m","meters" -> convert(centimetersToMeters, amount, true)
+//        "mi","miles" -> convert(milesToKilometers, amount)
+//        "km","kilometers" -> convert(milesToKilometers, amount)
+//        "in","inches" -> convert(inchesToMillimeters, amount)
+//        "mm","millimeters" -> convert(inchesToMillimeters, amount, true)
+//        "c","celsius" -> convert(celsiusToFahrenheit, amount)
+//        "f","fahrenheit" -> convert(celsiusToFahrenheit, amount, true)
+//        "lb","pounds" -> convert(poundsToKilograms, amount)
+//        "kg","kilograms" -> convert(poundsToKilograms, amount, true)
+//        else -> 0.0
+//    }
 
 }
 
