@@ -1,5 +1,7 @@
 package converter
 
+import java.lang.NumberFormatException
+
 val lengthUnits = arrayOf("m","meter","meters","km","kilometer","kilometers","cm","centimeter","centimeters","mm","millimeter","millimeters","mi","mile","miles","yd","yard","yards","ft","foot","feet","in","inch","inches")
 val massUnits = arrayOf("g","gram","grams","kg","kilogram","kilograms","mg","milligram","milligrams","lb","pound","pounds","oz","ounce","ounces")
 val temperatureUnits = arrayOf("degree celsius","degrees celsius","celsius","dc","c","degree fahrenheit","degrees fahrenheit","fahrenheit","df","f","kelvin","kelvins","k")
@@ -11,32 +13,43 @@ fun main() {
 fun showMenu() {
     while (true) {
         println("Enter what you want to convert (or exit): ")
-        val input = readln().split(" ")
+        val input = readln().lowercase().split(" ")
         if (input[0] == "exit") break
-        val amount = input[0].toDouble()
-
-        var inputUnit = ""
-        var outputUnit = ""
-        if (input[1].contains("degree")) {
-            inputUnit = "${input[1]} ${input[2]}"
-            if (input[4].contains("degree")) {
-                outputUnit = "${input[4]} ${input[5]}"
+        try {
+            val amount = input[0].toDouble()
+            var inputUnit = ""
+            var outputUnit = ""
+            if (input[1].contains("degree")) {
+                inputUnit = input[2]
+                if (input[4].contains("degree")) {
+                    outputUnit = input[5]
+                } else {
+                    outputUnit = input[4]
+                }
             } else {
-                outputUnit = input[4]
+                inputUnit = input[1]
+                if (input[3].contains("degree")) {
+                    outputUnit = input[4]
+                } else {
+                    outputUnit = input[3]
+                }
             }
-        } else {
-            inputUnit = input[1].lowercase()
-            outputUnit = input[3].lowercase()
-        }
 
-        if (isLength(inputUnit) && isLength(outputUnit)) {
-            convertLength(inputUnit, amount, outputUnit)
-        } else if (isMass(inputUnit) && isMass(outputUnit)) {
-            convertMass(inputUnit, amount, outputUnit)
-        } else if (isTemp(inputUnit) && isTemp(outputUnit)) {
-            convertTemperature(inputUnit, amount, outputUnit)
-        } else {
-            handleUnitMismatch(inputUnit, outputUnit)
+            if (isLength(inputUnit) && isLength(outputUnit)) {
+                if (amount < 0) {
+                    println("Length shouldn't be negative")
+                } else convertLength(inputUnit, amount, outputUnit)
+            } else if (isMass(inputUnit) && isMass(outputUnit)) {
+                if (amount < 0) {
+                    println("Weight shouldn't be negative")
+                } else convertMass(inputUnit, amount, outputUnit)
+            } else if (isTemp(inputUnit) && isTemp(outputUnit)) {
+                convertTemperature(inputUnit, amount, outputUnit)
+            } else {
+                handleUnitMismatch(inputUnit, outputUnit)
+            }
+        } catch (e: NumberFormatException) {
+            println("Parse error")
         }
     }
 }
@@ -73,25 +86,25 @@ fun convertMass(_inputUnit: String, inputAmount: Double, _outputUnit: String) {
 }
 
 fun convertTemperature(_inputUnit: String, inputTemperature: Double, _outputUnit: String) {
-    val inputUnit = clarifyTempUnitName(_inputUnit,1.0)
-    val outputUnit = clarifyTempUnitName(_outputUnit, 1.0)
+    val inputUnit = clarifyUnitName(_inputUnit,1.0,true)
+    val outputUnit = clarifyUnitName(_outputUnit, 1.0,true)
 
     val convertedTemperature: Double = when (inputUnit) {
         "degree Celsius" -> {
             when (outputUnit) {
                 "degree Fahrenheit" -> celsiusFahrenheitConversion(inputTemperature)                            //C->F
-                "Kelvin", -> celsiusKelvinConversion(inputTemperature)                                          //C->K
+                "kelvin", -> celsiusKelvinConversion(inputTemperature)                                          //C->K
                 else -> inputTemperature                                                                        //C->C
             }
         }
         "degree Fahrenheit" -> {
             when (outputUnit) {
                 "degree Celsius" -> celsiusFahrenheitConversion(inputTemperature,true)         //F->C
-                "Kelvin" -> kelvinFahrenheitConversion(inputTemperature,true)                   //F->K
+                "kelvin" -> kelvinFahrenheitConversion(inputTemperature,true)                   //F->K
                 else -> inputTemperature                                                                        //F->F
             }
         }
-        "Kelvin" -> {
+        "kelvin" -> {
             when (outputUnit) {
                 "degree Fahrenheit" -> kelvinFahrenheitConversion(inputTemperature)                             //K -> F
                 "degree Celsius" -> celsiusKelvinConversion(inputTemperature,true)                //K -> C
@@ -101,7 +114,7 @@ fun convertTemperature(_inputUnit: String, inputTemperature: Double, _outputUnit
         else -> 0.0
     }
 
-    println("$inputTemperature ${clarifyTempUnitName(inputUnit,inputTemperature)} is $convertedTemperature ${clarifyTempUnitName(outputUnit,convertedTemperature)}")
+    println("$inputTemperature ${clarifyUnitName(inputUnit,inputTemperature,true)} is $convertedTemperature ${clarifyUnitName(outputUnit,convertedTemperature,true)}")
 }
 
 fun convertToMeters(amount: Double, unit: String): Double {
@@ -179,46 +192,48 @@ fun kelvinFahrenheitConversion(temp: Double, fahrenheitToKelvin: Boolean = false
     }
 }
 
-fun clarifyUnitName(unit: String, amount: Double): String {
-    var newUnit = when (unit) {
-        "m", "meter", "meters" -> "meter"
-        "km", "kilometer", "kilometers" -> "kilometer"
-        "cm", "centimeter", "centimeters" -> "centimeter"
-        "mm", "millimeter", "millimeters" -> "millimeter"
-        "mi", "mile", "miles" -> "mile"
-        "yd", "yard", "yards" -> "yard"
-        "ft", "foot", "feet" -> "foot"
-        "in", "inch", "inches" -> "inch"
+fun clarifyUnitName(unit: String, amount: Double, isTemperature: Boolean = false): String {
 
-        "g", "gram", "grams" -> "gram"
-        "kg","kilogram", "kilograms" -> "kilogram"
-        "mg", "milligram", "milligrams" -> "milligram"
-        "lb", "pound", "pounds" -> "pound"
-        "oz", "ounce", "ounces" -> "ounce"
-
-        else -> unit
-    }
-    if (amount != 1.0) {
-        newUnit = makePlural(newUnit)
-    }
-    return newUnit
-}
-
-fun clarifyTempUnitName(unit: String, amount: Double): String {
-    var newUnit = when (unit) {
-        "degree celsius","degrees celsius","celsius","dc","c" -> "degree Celsius"
-        "degree fahrenheit","degrees fahrenheit","fahrenheit","df","f" -> "degree Fahrenheit"
-        "kelvin","kelvins","k" -> "Kelvin"
-        else -> unit
-    }
-    if (amount != 1.0) {
-        newUnit = when (newUnit) {
-            "degree Celsius" -> "degrees Celsius"
-            "degree" -> "degrees Fahrenheit"
-            else -> newUnit
+    if (isTemperature) {
+        var newUnit = when (unit) {
+            "degree celsius","degrees celsius","celsius","dc","c" -> "degree Celsius"
+            "degree fahrenheit","degrees fahrenheit","fahrenheit","df","f" -> "degree Fahrenheit"
+            "kelvin","kelvins","k" -> "kelvin"
+            else -> unit
         }
+        if (amount != 1.0) {
+            newUnit = when (newUnit) {
+                "degree Celsius" -> "degrees Celsius"
+                "degree Fahrenheit" -> "degrees Fahrenheit"
+                "kelvin" -> "kelvins"
+                else -> newUnit
+            }
+        }
+        return newUnit
+    } else {
+        var newUnit = when (unit) {
+            "m", "meter", "meters" -> "meter"
+            "km", "kilometer", "kilometers" -> "kilometer"
+            "cm", "centimeter", "centimeters" -> "centimeter"
+            "mm", "millimeter", "millimeters" -> "millimeter"
+            "mi", "mile", "miles" -> "mile"
+            "yd", "yard", "yards" -> "yard"
+            "ft", "foot", "feet" -> "foot"
+            "in", "inch", "inches" -> "inch"
+
+            "g", "gram", "grams" -> "gram"
+            "kg","kilogram", "kilograms" -> "kilogram"
+            "mg", "milligram", "milligrams" -> "milligram"
+            "lb", "pound", "pounds" -> "pound"
+            "oz", "ounce", "ounces" -> "ounce"
+
+            else -> unit
+        }
+        if (amount != 1.0) {
+            newUnit = makePlural(newUnit)
+        }
+        return newUnit
     }
-    return newUnit
 }
 
 fun makePlural(input: String): String {
@@ -234,35 +249,21 @@ fun makePlural(input: String): String {
 }
 
 fun handleUnitMismatch(inputUnit: String, outputUnit: String) {
-    if (isLength(inputUnit)) {
-        if (isMass(outputUnit)) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else if (isTemp(outputUnit)) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
-        } else {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
-        }
-    } else if (isMass(inputUnit)) {
-        if (isLength(outputUnit)) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else if (isTemp(outputUnit)) {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
-        } else {
-            println("Conversion from ${clarifyUnitName(inputUnit,0.0)} to ??? is impossible")
-        }
-    } else if (isTemp(inputUnit)) {
-        if (isMass(outputUnit) || isLength(outputUnit)) {
-            println("Conversion from ${clarifyTempUnitName(inputUnit,0.0)} to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else {
-            println("Conversion from ${clarifyTempUnitName(inputUnit,0.0)} to ??? is impossible")
-        }
-    } else if (!isAny(inputUnit)) {
-        if (isLength(outputUnit) || isMass(outputUnit)) {
-            println("Conversion from ??? to ${clarifyUnitName(outputUnit,0.0)} is impossible")
-        } else if (isTemp(outputUnit)) {
-            println("Conversion from ??? to ${clarifyTempUnitName(outputUnit,0.0)} is impossible")
-        } else {
-            println("Conversion from ??? to ??? is impossible")
-        }
+    var firstUnit = inputUnit
+    var secondUnit = outputUnit
+
+    firstUnit = if (isAny(firstUnit)) {
+        clarifyUnitName(firstUnit, 0.0, isTemp(firstUnit))
+    } else {
+        "???"
     }
+
+    secondUnit = if (isAny(secondUnit)) {
+        clarifyUnitName(secondUnit, 0.0, isTemp(secondUnit))
+    } else {
+        "???"
+    }
+
+    println("Conversion from $firstUnit to $secondUnit is impossible")
+
 }
